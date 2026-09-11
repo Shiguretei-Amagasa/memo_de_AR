@@ -1,0 +1,66 @@
+/* ==========================================================
+   memodeAR 共通スタイル
+   ロゴと同じ「角丸正方形＋左上/右下の四角アクセント」フレーム
+   ========================================================== */
+
+:root {
+  --bg: #f5f3ef;
+  --panel-bg: #ffffff;
+  --text: #2b2b2b;
+  --text-sub: #7a7a7a;
+  --accent: #2b2b2b;
+  --accent-positive: #2f9e4f;
+  --accent-danger: #c94b4b;
+  --frame-color: #191919;
+  --frame-width: 4px;
+  --frame-radius: 32px;   /* 右上・左下の丸みの大きさ（ロゴに合わせてやや大きめ） */
+  --frame-notch: 12px;    /* 左上・右下の四角アクセントのサイズ */
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+/* ---- ロゴと同じ枠デザイン ----
+   左上・右下：直角＋小さな四角アクセント（▪️のような留め具）
+   右上・左下：大きな丸み（開いたカッコのような印象）
+------------------------------------------------ */
+.frame-box {
+  position: relative;
+  background: var(--panel-bg);
+  border: var(--frame-width) solid var(--frame-color);
+  border-radius: 0 var(--frame-radius) 0 var(--frame-radius);
+}
+
+.frame-box::before,
+.frame-box::after {
+  content: "";
+  position: absolute;
+  width: var(--frame-notch);
+  height: var(--frame-notch);
+  background: var(--frame-color);
+  pointer-events: none;
+}
+.frame-box::before {
+  top: calc(var(--frame-width) * -1);
+  left: calc(var(--frame-width) * -1);
+}
+.frame-box::after {
+  bottom: calc(var(--frame-width) * -1);
+  right: calc(var(--frame-width) * -1);
+}
+
+/* 電脳っぽい発展用（今は未使用・後で有効化する想定） */
+.frame-box.glow {
+  box-shadow: 0 0 12px rgba(60, 200, 255, 0.5);
+  border-color: #3cc8ff;
+}
+.frame-box.glow::before,
+.frame-box.glow::after {
+  background: #3cc8ff;
+}

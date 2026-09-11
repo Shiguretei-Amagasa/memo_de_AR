@@ -3,18 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>離席中メモAR - 表示</title>
+<title>memodeAR - AR表示</title>
+<link rel="stylesheet" href="./assets/style.css">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="memodeAR">
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
-  * { box-sizing: border-box; }
-  html, body { margin: 0; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", sans-serif; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; }
+  a-scene { width: 100%; height: 100%; }
+
   #scanHint {
     position: fixed; top: 16px; left: 0; right: 0;
     text-align: center; color: #fff; font-size: 14px;
     text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     z-index: 20; pointer-events: none;
   }
+
+  /* マーカーを覆う形で出すメッセージボックス（画面中央固定のHUD） */
+  #noteOverlay {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 78vw;
+    max-width: 340px;
+    padding: 20px;
+    display: none;
+    z-index: 15;
+    background: rgba(253, 250, 243, 0.96);
+  }
+  #noteOverlay .tpl-label { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; }
+  #noteOverlay .note-line { font-size: 15px; line-height: 1.6; margin-bottom: 4px; white-space: pre-wrap; }
+  #callBtn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent-positive);
+    color: #fff;
+    font-size: 14px;
+  }
+
   #passcodeOverlay, #notFoundOverlay {
     position: fixed; inset: 0;
     background: rgba(20,20,20,0.92);
@@ -46,12 +78,17 @@
     font-size: 15px;
   }
   #passcodeError { color: #ff8080; font-size: 13px; margin-top: 8px; height: 16px; }
-  a-scene { width: 100%; height: 100%; }
 </style>
 </head>
 <body>
 
 <div id="scanHint">マーカーをカメラにかざしてください</div>
+
+<div id="noteOverlay" class="frame-box">
+  <div class="tpl-label" id="noteTplLabel"></div>
+  <div id="noteBody"></div>
+  <button id="callBtn" class="hidden">電話をかける</button>
+</div>
 
 <div id="passcodeOverlay">
   <div>パスコードを入力してください</div>
@@ -61,7 +98,7 @@
 </div>
 
 <div id="notFoundOverlay">
-  <div>メモがまだ登録されていません。<br>先に入力ページから保存してください。</div>
+  <div>メモがまだ設定されていません。<br>先に入力ページで「メモに設定」してください。</div>
 </div>
 
 <a-scene
@@ -71,62 +108,51 @@
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: true"
 >
-  <a-assets></a-assets>
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-  <a-entity id="notePanel" mindar-image-target="targetIndex: 0">
-    <a-plane
-      color="#fdfaf3"
-      opacity="0.95"
-      width="1.4" height="1.0"
-      position="0 0 0"
-    ></a-plane>
-    <a-text
-      id="noteText"
-      value=""
-      color="#2b2b2b"
-      width="1.3"
-      align="left"
-      position="-0.62 0.42 0.01"
-      wrap-count="34"
-    ></a-text>
-    <a-plane
-      id="callButton"
-      color="#2f9e4f"
-      width="0.5" height="0.15"
-      position="0 -0.38 0.01"
-      class="clickable"
-    ></a-plane>
-    <a-text
-      value="電話をかける"
-      color="#fff"
-      align="center"
-      width="1"
-      position="0 -0.38 0.02"
-    ></a-text>
-  </a-entity>
+  <a-entity id="markerTarget" mindar-image-target="targetIndex: 0"></a-entity>
 </a-scene>
 
 <script>
+const ACTIVE_KEY = "awayNoteActive";
 let noteData = null;
 let pendingAction = null; // "display" または "call"
 
-function loadNote() {
+function loadActiveNote() {
   try {
-    const raw = localStorage.getItem("awayNoteData");
+    const raw = localStorage.getItem(ACTIVE_KEY);
     return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
+  } catch (e) { return null; }
 }
 
-function buildNoteText(data) {
+function buildNoteLines(data) {
   const lines = [];
-  lines.push("【" + data.templateLabel + "】");
-  Object.keys(data.fields).forEach(k => {
-    if (data.fields[k]) lines.push(data.fields[k]);
+  if (data.contentType === "template") {
+    Object.values(data.fields).forEach(v => { if (v) lines.push(v); });
+  } else {
+    lines.push(data.fields.freeText || "");
+  }
+  return lines;
+}
+
+function renderNote() {
+  document.getElementById("noteTplLabel").textContent = noteData.templateLabel;
+  const body = document.getElementById("noteBody");
+  body.innerHTML = "";
+  buildNoteLines(noteData).forEach(line => {
+    const div = document.createElement("div");
+    div.className = "note-line";
+    div.textContent = line;
+    body.appendChild(div);
   });
-  return lines.join("\n");
+
+  const callBtn = document.getElementById("callBtn");
+  if (noteData.contactEnabled && noteData.contactPhone) {
+    callBtn.classList.remove("hidden");
+  } else {
+    callBtn.classList.add("hidden");
+  }
+
+  document.getElementById("noteOverlay").style.display = "block";
 }
 
 function showPasscodeOverlay(action) {
@@ -141,17 +167,13 @@ function checkPasscode() {
   if (input === noteData.passcodeValue) {
     document.getElementById("passcodeOverlay").style.display = "none";
     if (pendingAction === "display") {
-      renderNoteText();
+      renderNote();
     } else if (pendingAction === "call") {
       doCall();
     }
   } else {
     document.getElementById("passcodeError").textContent = "パスコードが違います";
   }
-}
-
-function renderNoteText() {
-  document.getElementById("noteText").setAttribute("value", buildNoteText(noteData));
 }
 
 function doCall() {
@@ -166,27 +188,28 @@ function onMarkerFound() {
     document.getElementById("notFoundOverlay").style.display = "flex";
     return;
   }
-  if (noteData.passcodeMode === "display") {
+  if (noteData.passcodeOnDisplay) {
     showPasscodeOverlay("display");
   } else {
-    renderNoteText();
+    renderNote();
   }
 }
 
 function onMarkerLost() {
   document.getElementById("scanHint").style.display = "block";
+  document.getElementById("noteOverlay").style.display = "none";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  noteData = loadNote();
+  noteData = loadActiveNote();
 
-  const target = document.getElementById("notePanel");
+  const target = document.getElementById("markerTarget");
   target.addEventListener("targetFound", onMarkerFound);
   target.addEventListener("targetLost", onMarkerLost);
 
-  document.getElementById("callButton").addEventListener("click", () => {
+  document.getElementById("callBtn").addEventListener("click", () => {
     if (!noteData) return;
-    if (noteData.passcodeMode === "call") {
+    if (noteData.passcodeOnCall) {
       showPasscodeOverlay("call");
     } else {
       doCall();

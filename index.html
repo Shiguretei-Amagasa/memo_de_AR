@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>memodeAR</title>
+<link rel="stylesheet" href="./assets/style.css">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="memodeAR">
+<style>
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; }
+  .wrap { width: 100%; max-width: 360px; text-align: center; }
+  .logo { width: 96px; height: 96px; margin-bottom: 8px; }
+  h1 { font-size: 22px; margin-bottom: 32px; }
+  .frame-box { padding: 20px; margin-bottom: 16px; display: block; text-decoration: none; }
+  .frame-box .label { font-size: 16px; font-weight: 600; color: var(--text); }
+  .frame-box .desc { font-size: 12px; color: var(--text-sub); margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <img class="logo" src="./assets/img/%E3%83%A1%E3%83%A2%20de%20AR%20_%20logo.png" alt="memodeAR logo">
+  <h1>memodeAR</h1>
+  <a class="frame-box" href="./input.html">
+    <div class="label">メモを入力する</div>
+    <div class="desc">テンプレート／自由記述で内容を設定</div>
+  </a>
+  <a class="frame-box" href="./display.html">
+    <div class="label">ARで確認する</div>
+    <div class="desc">マーカーを読み取って表示</div>
+  </a>
+</div>
+</body>
+</html>

@@ -3,255 +3,361 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>離席中メモAR - 入力ページ</title>
+<title>memodeAR - 入力</title>
+<link rel="stylesheet" href="./assets/style.css">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="memodeAR">
 <style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", sans-serif;
-    background: #f5f3ef;
-    color: #2b2b2b;
-    margin: 0;
-    padding: 24px 16px 80px;
-  }
-  h1 { font-size: 20px; margin-bottom: 4px; }
-  p.sub { color: #777; font-size: 13px; margin-top: 0; margin-bottom: 24px; }
-  .card {
-    background: #fff;
-    border-radius: 12px;
+  body { padding: 20px 16px 40px; max-width: 480px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 20px; }
+  .section {
     padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    margin-bottom: 14px;
   }
-  label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; margin-top: 14px; }
-  label:first-child { margin-top: 0; }
-  input[type="text"], input[type="tel"], input[type="password"], textarea, select {
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .section-head .title { font-size: 13px; color: var(--text-sub); }
+  .check-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-sub);
+    white-space: nowrap;
+  }
+  .check-inline input { width: 16px; height: 16px; }
+
+  select, input[type="text"], input[type="tel"], input[type="password"], textarea {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 15px;
     font-family: inherit;
+    background: #fff;
   }
-  textarea { min-height: 80px; resize: vertical; }
-  .template-tabs {
+  textarea { min-height: 90px; resize: vertical; }
+  label.field-label { display: block; font-size: 12px; color: var(--text-sub); margin: 10px 0 4px; }
+  label.field-label:first-of-type { margin-top: 0; }
+
+  .actions-row {
     display: flex;
     gap: 8px;
-    margin-bottom: 4px;
-    flex-wrap: wrap;
+    margin-top: 4px;
   }
-  .template-tabs button {
+  .actions-row button {
     flex: 1;
-    min-width: 70px;
-    padding: 10px 8px;
-    border: 1px solid #ddd;
-    background: #fff;
+    padding: 10px 6px;
     border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 13px;
+  }
+  .actions-row button:active { background: #f0f0f0; }
+
+  .set-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 16px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .status { text-align: center; font-size: 12px; color: var(--accent-positive); height: 16px; margin-top: 6px; }
+
+  .history-item {
+    padding: 10px 12px;
+    margin-bottom: 8px;
     font-size: 13px;
     cursor: pointer;
   }
-  .template-tabs button.active {
-    background: #2b2b2b;
-    color: #fff;
-    border-color: #2b2b2b;
-  }
-  .radio-row { display: flex; gap: 16px; margin-top: 8px; }
-  .radio-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 14px; }
-  .radio-row input { width: auto; }
-  .save-btn {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    padding: 16px;
-    background: #2b2b2b;
-    color: #fff;
-    border: none;
-    font-size: 16px;
-    font-weight: 600;
-  }
-  .status {
-    text-align: center;
-    font-size: 13px;
-    color: #2f9e4f;
-    height: 18px;
-    margin-top: -8px;
-  }
-  .hidden { display: none; }
+  .history-item.selected { border-color: #3cc8ff; }
+  .history-item .h-title { font-weight: 600; }
+  .history-item .h-sub { color: var(--text-sub); font-size: 11px; margin-top: 2px; }
+  .empty-hint { color: var(--text-sub); font-size: 12px; text-align: center; padding: 8px 0; }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<h1>メモ入力</h1>
-<p class="sub">テンプレートを選んで入力すると、ARで表示されます</p>
+<h1>memodeAR / メモ入力</h1>
 
-<div class="card">
-  <div class="template-tabs" id="templateTabs">
-    <button data-t="away" class="active">離席中</button>
-    <button data-t="out">外出用</button>
-    <button data-t="holiday">休み</button>
-    <button data-t="free">自由記述</button>
+<div class="section frame-box">
+  <div class="section-head">
+    <span class="title">内容</span>
+    <label class="check-inline">
+      <input type="checkbox" id="passcodeOnDisplay"> 表示時にパスコード
+    </label>
+  </div>
+
+  <select id="contentType">
+    <option value="template">定型文</option>
+    <option value="free">自由記述</option>
+  </select>
+
+  <div id="templateSelectWrap">
+    <label class="field-label">テンプレート</label>
+    <select id="templateKey">
+      <option value="away">離席中</option>
+      <option value="out">外出用</option>
+      <option value="holiday">休み</option>
+    </select>
+    <div id="templateFields"></div>
+  </div>
+
+  <div id="freeTextWrap" class="hidden">
+    <label class="field-label">本文</label>
+    <textarea id="freeText" placeholder="自由にメモを入力してください"></textarea>
   </div>
 </div>
 
-<div class="card" id="templateFields">
-  <!-- JSで動的に生成 -->
-</div>
-
-<div class="card">
-  <label>連絡先電話番号（任意・AR画面から発信できます）</label>
-  <input type="tel" id="contactPhone" placeholder="09012345678">
-</div>
-
-<div class="card">
-  <label>パスコード保護</label>
-  <div class="radio-row">
-    <label><input type="radio" name="passcodeMode" value="none" checked> 使わない</label>
-    <label><input type="radio" name="passcodeMode" value="display"> 表示時に要求</label>
-    <label><input type="radio" name="passcodeMode" value="call"> 発信時に要求</label>
+<div class="section frame-box">
+  <div class="section-head">
+    <span class="title">連絡先</span>
+    <label class="check-inline">
+      <input type="checkbox" id="contactEnabled"> 電話連絡を有効にする
+    </label>
   </div>
-  <div id="passcodeInputWrap" class="hidden">
-    <label>パスコード（数字4桁など）</label>
-    <input type="password" id="passcodeValue" inputmode="numeric" placeholder="1234">
+  <div id="contactWrap" class="hidden">
+    <label class="field-label">電話番号</label>
+    <input type="tel" id="contactPhone" placeholder="09012345678">
+    <label class="check-inline" style="margin-top:10px;">
+      <input type="checkbox" id="passcodeOnCall"> 発信時にパスコード
+    </label>
   </div>
 </div>
 
-<button class="save-btn" onclick="saveNote()">保存する</button>
+<div class="section frame-box" id="passcodeValueSection" style="display:none;">
+  <label class="field-label">パスコード</label>
+  <input type="password" id="passcodeValue" inputmode="numeric" placeholder="1234">
+</div>
+
+<div class="actions-row">
+  <button onclick="createNote()">メモを作成</button>
+  <button onclick="updateNote()">メモを更新</button>
+  <button onclick="deleteNote()">メモを削除</button>
+</div>
+
+<button class="set-btn" onclick="setActiveNote()">メモに設定</button>
 <div class="status" id="statusMsg"></div>
+
+<h2 style="font-size:13px; color:var(--text-sub); margin-top:28px;">履歴（最大5件）</h2>
+<div id="historyList"></div>
 
 <script>
 const templates = {
   away: {
     label: "離席中",
     fields: [
-      { key: "message", label: "離席用メッセージ", type: "text", placeholder: "少々席を外しております" },
-      { key: "destination", label: "行き先", type: "text", placeholder: "例：会議室B" },
-      { key: "returnTime", label: "戻り時間", type: "text", placeholder: "例：15:30頃" },
+      { key: "message", label: "離席用メッセージ", placeholder: "少々席を外しております" },
+      { key: "destination", label: "行き先", placeholder: "例：会議室B" },
+      { key: "returnTime", label: "戻り時間", placeholder: "例：15:30頃" },
     ]
   },
   out: {
     label: "外出用",
     fields: [
-      { key: "message", label: "外出メッセージ", type: "text", placeholder: "本日は外出しております" },
-      { key: "destination", label: "行き先", type: "text", placeholder: "例：客先訪問" },
-      { key: "returnTime", label: "戻り予定", type: "text", placeholder: "例：本日18時頃 / 翌日" },
+      { key: "message", label: "外出メッセージ", placeholder: "本日は外出しております" },
+      { key: "destination", label: "行き先", placeholder: "例：客先訪問" },
+      { key: "returnTime", label: "戻り予定", placeholder: "例：本日18時頃" },
     ]
   },
   holiday: {
     label: "休み",
     fields: [
-      { key: "message", label: "メッセージ", type: "text", placeholder: "本日はお休みをいただいております" },
-      { key: "returnTime", label: "次回対応日", type: "text", placeholder: "例：明日9時より" },
-    ]
-  },
-  free: {
-    label: "自由記述",
-    fields: [
-      { key: "freeText", label: "本文", type: "textarea", placeholder: "自由にメモを入力してください" },
+      { key: "message", label: "メッセージ", placeholder: "本日はお休みをいただいております" },
+      { key: "returnTime", label: "次回対応日", placeholder: "例：明日9時より" },
     ]
   }
 };
 
-let currentTemplate = "away";
+const HISTORY_KEY = "awayNoteHistory";
+const ACTIVE_KEY = "awayNoteActive";
+let selectedHistoryId = null;
 
-function renderFields() {
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveHistory(list) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+
+function renderTemplateFields() {
+  const key = document.getElementById("templateKey").value;
   const wrap = document.getElementById("templateFields");
   wrap.innerHTML = "";
-  const tpl = templates[currentTemplate];
-  const saved = loadNote();
-  const values = (saved && saved.template === currentTemplate) ? saved.fields : {};
-
-  tpl.fields.forEach(f => {
+  templates[key].fields.forEach(f => {
     const label = document.createElement("label");
+    label.className = "field-label";
     label.textContent = f.label;
     wrap.appendChild(label);
-
-    let input;
-    if (f.type === "textarea") {
-      input = document.createElement("textarea");
-    } else {
-      input = document.createElement("input");
-      input.type = "text";
-    }
-    input.id = "field_" + f.key;
-    input.placeholder = f.placeholder || "";
-    input.value = values[f.key] || "";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = "tf_" + f.key;
+    input.placeholder = f.placeholder;
     wrap.appendChild(input);
   });
 }
 
-document.getElementById("templateTabs").addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
-  if (!btn) return;
-  document.querySelectorAll("#templateTabs button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
-  currentTemplate = btn.dataset.t;
-  renderFields();
+document.getElementById("contentType").addEventListener("change", (e) => {
+  const isTemplate = e.target.value === "template";
+  document.getElementById("templateSelectWrap").classList.toggle("hidden", !isTemplate);
+  document.getElementById("freeTextWrap").classList.toggle("hidden", isTemplate);
 });
-
-document.querySelectorAll('input[name="passcodeMode"]').forEach(r => {
-  r.addEventListener("change", () => {
-    const wrap = document.getElementById("passcodeInputWrap");
-    wrap.classList.toggle("hidden", r.value === "none" && r.checked);
-    if (document.querySelector('input[name="passcodeMode"]:checked').value === "none") {
-      wrap.classList.add("hidden");
-    } else {
-      wrap.classList.remove("hidden");
-    }
-  });
+document.getElementById("templateKey").addEventListener("change", renderTemplateFields);
+document.getElementById("contactEnabled").addEventListener("change", (e) => {
+  document.getElementById("contactWrap").classList.toggle("hidden", !e.target.checked);
+  updatePasscodeSectionVisibility();
 });
+document.getElementById("passcodeOnDisplay").addEventListener("change", updatePasscodeSectionVisibility);
+document.getElementById("passcodeOnCall").addEventListener("change", updatePasscodeSectionVisibility);
 
-function loadNote() {
-  try {
-    const raw = localStorage.getItem("awayNoteData");
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
+function updatePasscodeSectionVisibility() {
+  const need = document.getElementById("passcodeOnDisplay").checked ||
+               (document.getElementById("contactEnabled").checked && document.getElementById("passcodeOnCall").checked);
+  document.getElementById("passcodeValueSection").style.display = need ? "block" : "none";
 }
 
-function saveNote() {
-  const tpl = templates[currentTemplate];
-  const fields = {};
-  tpl.fields.forEach(f => {
-    fields[f.key] = document.getElementById("field_" + f.key).value;
-  });
-
-  const passcodeMode = document.querySelector('input[name="passcodeMode"]:checked').value;
-  const passcodeValue = document.getElementById("passcodeValue").value;
-
-  const data = {
-    template: currentTemplate,
-    templateLabel: tpl.label,
+function collectFormData() {
+  const contentType = document.getElementById("contentType").value;
+  let fields = {};
+  if (contentType === "template") {
+    const key = document.getElementById("templateKey").value;
+    templates[key].fields.forEach(f => {
+      fields[f.key] = document.getElementById("tf_" + f.key).value;
+    });
+  } else {
+    fields.freeText = document.getElementById("freeText").value;
+  }
+  return {
+    contentType: contentType,
+    templateKey: contentType === "template" ? document.getElementById("templateKey").value : null,
+    templateLabel: contentType === "template" ? templates[document.getElementById("templateKey").value].label : "自由記述",
     fields: fields,
+    contactEnabled: document.getElementById("contactEnabled").checked,
     contactPhone: document.getElementById("contactPhone").value,
-    passcodeMode: passcodeMode,
-    passcodeValue: passcodeMode === "none" ? "" : passcodeValue,
+    passcodeOnDisplay: document.getElementById("passcodeOnDisplay").checked,
+    passcodeOnCall: document.getElementById("passcodeOnCall").checked,
+    passcodeValue: document.getElementById("passcodeValue").value,
     updatedAt: new Date().toISOString()
   };
-
-  localStorage.setItem("awayNoteData", JSON.stringify(data));
-
-  const status = document.getElementById("statusMsg");
-  status.textContent = "保存しました";
-  setTimeout(() => status.textContent = "", 2000);
 }
 
-// 初期表示：保存済みデータがあれば復元
-(function init() {
-  const saved = loadNote();
-  if (saved) {
-    currentTemplate = saved.template;
-    document.querySelectorAll("#templateTabs button").forEach(b => {
-      b.classList.toggle("active", b.dataset.t === currentTemplate);
+function applyFormData(data) {
+  document.getElementById("contentType").value = data.contentType;
+  document.getElementById("templateSelectWrap").classList.toggle("hidden", data.contentType !== "template");
+  document.getElementById("freeTextWrap").classList.toggle("hidden", data.contentType === "template");
+
+  if (data.contentType === "template") {
+    document.getElementById("templateKey").value = data.templateKey;
+    renderTemplateFields();
+    templates[data.templateKey].fields.forEach(f => {
+      document.getElementById("tf_" + f.key).value = data.fields[f.key] || "";
     });
-    document.getElementById("contactPhone").value = saved.contactPhone || "";
-    const radio = document.querySelector(`input[name="passcodeMode"][value="${saved.passcodeMode}"]`);
-    if (radio) radio.checked = true;
-    if (saved.passcodeMode !== "none") {
-      document.getElementById("passcodeInputWrap").classList.remove("hidden");
-      document.getElementById("passcodeValue").value = saved.passcodeValue || "";
-    }
+  } else {
+    document.getElementById("freeText").value = data.fields.freeText || "";
   }
-  renderFields();
-})();
+
+  document.getElementById("contactEnabled").checked = !!data.contactEnabled;
+  document.getElementById("contactWrap").classList.toggle("hidden", !data.contactEnabled);
+  document.getElementById("contactPhone").value = data.contactPhone || "";
+  document.getElementById("passcodeOnDisplay").checked = !!data.passcodeOnDisplay;
+  document.getElementById("passcodeOnCall").checked = !!data.passcodeOnCall;
+  document.getElementById("passcodeValue").value = data.passcodeValue || "";
+  updatePasscodeSectionVisibility();
+}
+
+function showStatus(msg) {
+  const el = document.getElementById("statusMsg");
+  el.textContent = msg;
+  setTimeout(() => el.textContent = "", 2000);
+}
+
+function createNote() {
+  const data = collectFormData();
+  data.id = "n_" + Date.now();
+  let list = loadHistory();
+  list.unshift(data);
+  if (list.length > 5) list = list.slice(0, 5);
+  saveHistory(list);
+  selectedHistoryId = data.id;
+  renderHistory();
+  showStatus("履歴に作成しました");
+}
+
+function updateNote() {
+  if (!selectedHistoryId) { showStatus("先に履歴から選択してください"); return; }
+  let list = loadHistory();
+  const idx = list.findIndex(n => n.id === selectedHistoryId);
+  if (idx === -1) { showStatus("先に履歴から選択してください"); return; }
+  const data = collectFormData();
+  data.id = selectedHistoryId;
+  list[idx] = data;
+  saveHistory(list);
+  renderHistory();
+  showStatus("更新しました");
+}
+
+function deleteNote() {
+  if (!selectedHistoryId) { showStatus("先に履歴から選択してください"); return; }
+  let list = loadHistory().filter(n => n.id !== selectedHistoryId);
+  saveHistory(list);
+  selectedHistoryId = null;
+  renderHistory();
+  showStatus("削除しました");
+}
+
+function setActiveNote() {
+  const data = collectFormData();
+  data.id = selectedHistoryId || ("n_" + Date.now());
+  localStorage.setItem(ACTIVE_KEY, JSON.stringify(data));
+  showStatus("メモに設定しました");
+}
+
+function selectHistory(id) {
+  const list = loadHistory();
+  const item = list.find(n => n.id === id);
+  if (!item) return;
+  selectedHistoryId = id;
+  applyFormData(item);
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = loadHistory();
+  const wrap = document.getElementById("historyList");
+  wrap.innerHTML = "";
+  if (list.length === 0) {
+    wrap.innerHTML = '<div class="empty-hint">まだ履歴がありません</div>';
+    return;
+  }
+  list.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "history-item frame-box" + (item.id === selectedHistoryId ? " selected" : "");
+    const dt = new Date(item.updatedAt);
+    const dtStr = dt.getMonth()+1 + "/" + dt.getDate() + " " + String(dt.getHours()).padStart(2,"0") + ":" + String(dt.getMinutes()).padStart(2,"0");
+    el.innerHTML = `<div class="h-title">${item.templateLabel}</div><div class="h-sub">${dtStr}</div>`;
+    el.addEventListener("click", () => selectHistory(item.id));
+    wrap.appendChild(el);
+  });
+}
+
+// 初期化
+renderTemplateFields();
+renderHistory();
 </script>
 </body>
 </html>
