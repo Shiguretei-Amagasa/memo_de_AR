@@ -8,7 +8,7 @@ display.html          … AR表示画面
 manifest.json         … ホーム画面追加（PWA）用設定
 marker.mind           … 仮のマーカーデータ（要差し替え）
 assets/style.css       … 共通デザイン（ロゴと同じ枠スタイル）
-assets/img/            … ロゴ画像（メモ de AR _ logo.png）
+assets/img/            … ロゴ画像（memodeAR_logo.png）
 assets/icons/          … ホーム画面アイコンの格納場所
 ```
 
@@ -42,7 +42,7 @@ assets/icons/          … ホーム画面アイコンの格納場所
   `.frame-box.glow` という拡張用クラスを用意してあります
 
 ## 共通デザイン（ロゴの枠）について
-いただいたロゴ画像（`assets/img/logo.png`）を参考に、`assets/style.css` の
+いただいたロゴ画像（`assets/img/memodeAR_logo.png`）を参考に、`assets/style.css` の
 `.frame-box` クラスとして枠デザインを再現しています。
 - 左上・右下：直角の鋭いコーナー＋小さな四角アクセント
 - 右上・左下：大きな半径の丸み
