@@ -1,6 +1,8 @@
 /* ==========================================================
    memodeAR 共通スタイル
-   ロゴと同じ「角丸正方形＋左上/右下の四角アクセント」フレーム
+   ロゴと同じフレーム：
+   左上・右下 = 角にフラッシュした四角アクセント（線とは隙間あり）
+   右上・左下 = 大きな丸み（CSSの単角丸みテクニック）
    ========================================================== */
 
 :root {
@@ -8,13 +10,15 @@
   --panel-bg: #ffffff;
   --text: #2b2b2b;
   --text-sub: #7a7a7a;
-  --accent: #2b2b2b;
+  --accent: #191919;
   --accent-positive: #2f9e4f;
   --accent-danger: #c94b4b;
+
   --frame-color: #191919;
-  --frame-width: 4px;
-  --frame-radius: 32px;   /* 右上・左下の丸みの大きさ（ロゴに合わせてやや大きめ） */
-  --frame-notch: 12px;    /* 左上・右下の四角アクセントのサイズ */
+  --frame-width: 4px;   /* 線（辺）の太さ */
+  --frame-notch: 12px;  /* 左上・右下の四角アクセントの一辺 */
+  --frame-gap: 4px;     /* アクセントと線の間の隙間 */
+  --frame-radius: 30px; /* 右上・左下の丸みの半径 */
 }
 
 * { box-sizing: border-box; }
@@ -26,41 +30,93 @@ body {
   margin: 0;
 }
 
-/* ---- ロゴと同じ枠デザイン ----
-   左上・右下：直角＋小さな四角アクセント（▪️のような留め具）
-   右上・左下：大きな丸み（開いたカッコのような印象）
------------------------------------------------- */
+/* ---- フレーム本体 ---- */
 .frame-box {
   position: relative;
   background: var(--panel-bg);
-  border: var(--frame-width) solid var(--frame-color);
-  border-radius: 0 var(--frame-radius) 0 var(--frame-radius);
+}
+.frame-box > .fb-content {
+  position: relative;
+  z-index: 1;
 }
 
-.frame-box::before,
-.frame-box::after {
-  content: "";
+.frame-box > [class^="fb-"] {
   position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 左上・右下：フラッシュした四角アクセント（線とは隙間があり接触しない） */
+.frame-box > .fb-corner-tl {
+  top: 0; left: 0;
   width: var(--frame-notch);
   height: var(--frame-notch);
   background: var(--frame-color);
-  pointer-events: none;
 }
-.frame-box::before {
-  top: calc(var(--frame-width) * -1);
-  left: calc(var(--frame-width) * -1);
+.frame-box > .fb-corner-br {
+  bottom: 0; right: 0;
+  width: var(--frame-notch);
+  height: var(--frame-notch);
+  background: var(--frame-color);
 }
-.frame-box::after {
-  bottom: calc(var(--frame-width) * -1);
-  right: calc(var(--frame-width) * -1);
+
+/* 右上・左下：CSSの単角丸みテクニックによる大きな弧 */
+.frame-box > .fb-corner-tr {
+  top: 0; right: 0;
+  width: var(--frame-radius);
+  height: var(--frame-radius);
+  border-top: var(--frame-width) solid var(--frame-color);
+  border-right: var(--frame-width) solid var(--frame-color);
+  border-top-right-radius: var(--frame-radius);
+}
+.frame-box > .fb-corner-bl {
+  bottom: 0; left: 0;
+  width: var(--frame-radius);
+  height: var(--frame-radius);
+  border-bottom: var(--frame-width) solid var(--frame-color);
+  border-left: var(--frame-width) solid var(--frame-color);
+  border-bottom-left-radius: var(--frame-radius);
+}
+
+/* 直線部分（アクセントや丸みの間をつなぐ） */
+.frame-box > .fb-edge-top {
+  top: 0;
+  height: var(--frame-width);
+  left: calc(var(--frame-notch) + var(--frame-gap));
+  right: var(--frame-radius);
+  background: var(--frame-color);
+}
+.frame-box > .fb-edge-bottom {
+  bottom: 0;
+  height: var(--frame-width);
+  right: calc(var(--frame-notch) + var(--frame-gap));
+  left: var(--frame-radius);
+  background: var(--frame-color);
+}
+.frame-box > .fb-edge-left {
+  left: 0;
+  width: var(--frame-width);
+  top: calc(var(--frame-notch) + var(--frame-gap));
+  bottom: var(--frame-radius);
+  background: var(--frame-color);
+}
+.frame-box > .fb-edge-right {
+  right: 0;
+  width: var(--frame-width);
+  bottom: calc(var(--frame-notch) + var(--frame-gap));
+  top: var(--frame-radius);
+  background: var(--frame-color);
 }
 
 /* 電脳っぽい発展用（今は未使用・後で有効化する想定） */
 .frame-box.glow {
-  box-shadow: 0 0 12px rgba(60, 200, 255, 0.5);
-  border-color: #3cc8ff;
+  --frame-color: #3cc8ff;
 }
-.frame-box.glow::before,
-.frame-box.glow::after {
-  background: #3cc8ff;
+.frame-box.glow > .fb-corner-tl,
+.frame-box.glow > .fb-corner-br,
+.frame-box.glow > .fb-edge-top,
+.frame-box.glow > .fb-edge-bottom,
+.frame-box.glow > .fb-edge-left,
+.frame-box.glow > .fb-edge-right {
+  box-shadow: 0 0 8px rgba(60, 200, 255, 0.7);
 }
