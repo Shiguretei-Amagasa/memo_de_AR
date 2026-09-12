@@ -9,13 +9,40 @@
 <link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="memodeAR">
+<script src="./assets/frame.js" defer></script>
 <style>
-  body { padding: 20px 16px 40px; max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 18px; margin: 0 0 20px; }
-  .section {
-    padding: 16px;
+  body { padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .menu-btn {
+    display: block;
+    width: 100%;
+    padding: 22px 16px;
     margin-bottom: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    background: #fff;
+    border: none;
+    text-align: left;
   }
+  .menu-btn .fb-content { display: flex; align-items: center; justify-content: space-between; }
+  .menu-btn .sub { font-size: 11px; color: var(--text-sub); font-weight: 400; margin-top: 4px; }
+
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--text-sub);
+    font-size: 13px;
+    padding: 6px 0 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .section { margin-bottom: 14px; }
+  .section .fb-content { padding: 16px; }
   .section-head {
     display: flex;
     align-items: center;
@@ -46,25 +73,10 @@
   label.field-label { display: block; font-size: 12px; color: var(--text-sub); margin: 10px 0 4px; }
   label.field-label:first-of-type { margin-top: 0; }
 
-  .actions-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 4px;
-  }
-  .actions-row button {
-    flex: 1;
-    padding: 10px 6px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: #fff;
-    font-size: 13px;
-  }
-  .actions-row button:active { background: #f0f0f0; }
-
-  .set-btn {
+  .primary-btn {
     width: 100%;
     padding: 14px;
-    margin-top: 16px;
+    margin-top: 4px;
     border: none;
     border-radius: 10px;
     background: var(--accent);
@@ -72,87 +84,133 @@
     font-size: 15px;
     font-weight: 600;
   }
-
-  .status { text-align: center; font-size: 12px; color: var(--accent-positive); height: 16px; margin-top: 6px; }
-
-  .history-item {
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    font-size: 13px;
-    cursor: pointer;
+  .danger-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 4px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent-danger);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
   }
-  .history-item.selected { border-color: #3cc8ff; }
-  .history-item .h-title { font-weight: 600; }
+
+  .status { text-align: center; font-size: 12px; color: var(--accent-positive); height: 16px; margin-top: 10px; }
+
+  .history-item { margin-bottom: 10px; cursor: pointer; background: #fff; }
+  .history-item .fb-content { padding: 12px 14px; }
+  .history-item .h-title { font-weight: 600; font-size: 14px; }
   .history-item .h-sub { color: var(--text-sub); font-size: 11px; margin-top: 2px; }
-  .empty-hint { color: var(--text-sub); font-size: 12px; text-align: center; padding: 8px 0; }
+  .empty-hint { color: var(--text-sub); font-size: 13px; text-align: center; padding: 24px 0; }
+
+  .note-preview { margin-bottom: 16px; }
+  .note-preview .fb-content { padding: 16px; }
+  .note-preview .p-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .note-preview .p-line { font-size: 14px; line-height: 1.6; color: var(--text); white-space: pre-wrap; }
+
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
-<h1>memodeAR / メモ入力</h1>
-
-<div class="section frame-box">
-  <div class="section-head">
-    <span class="title">内容</span>
-    <label class="check-inline">
-      <input type="checkbox" id="passcodeOnDisplay"> 表示時にパスコード
-    </label>
-  </div>
-
-  <select id="contentType">
-    <option value="template">定型文</option>
-    <option value="free">自由記述</option>
-  </select>
-
-  <div id="templateSelectWrap">
-    <label class="field-label">テンプレート</label>
-    <select id="templateKey">
-      <option value="away">離席中</option>
-      <option value="out">外出用</option>
-      <option value="holiday">休み</option>
-    </select>
-    <div id="templateFields"></div>
-  </div>
-
-  <div id="freeTextWrap" class="hidden">
-    <label class="field-label">本文</label>
-    <textarea id="freeText" placeholder="自由にメモを入力してください"></textarea>
-  </div>
+<!-- ============ メニュー画面 ============ -->
+<div class="screen active" id="screenMenu">
+  <button class="menu-btn frame-box" onclick="goCreate()">
+    <div class="fb-content">
+      <div>メモを作成<div class="sub">新しいメモを作って設定する</div></div>
+      <span>›</span>
+    </div>
+  </button>
+  <button class="menu-btn frame-box" onclick="goUpdateList()">
+    <div class="fb-content">
+      <div>メモを更新<div class="sub">過去の履歴から選んで編集する</div></div>
+      <span>›</span>
+    </div>
+  </button>
+  <button class="menu-btn frame-box" onclick="goDeleteConfirm()">
+    <div class="fb-content">
+      <div>メモを削除<div class="sub">現在設定中のメモを削除する</div></div>
+      <span>›</span>
+    </div>
+  </button>
 </div>
 
-<div class="section frame-box">
-  <div class="section-head">
-    <span class="title">連絡先</span>
-    <label class="check-inline">
-      <input type="checkbox" id="contactEnabled"> 電話連絡を有効にする
-    </label>
+<!-- ============ 入力フォーム画面（作成／更新 共用） ============ -->
+<div class="screen" id="screenForm">
+  <button class="back-btn" onclick="backFromForm()">‹ 戻る</button>
+
+  <div class="section frame-box">
+    <div class="fb-content">
+      <div class="section-head">
+        <span class="title">内容</span>
+        <label class="check-inline">
+          <input type="checkbox" id="passcodeOnDisplay"> 表示時にパスコード
+        </label>
+      </div>
+
+      <select id="contentType">
+        <option value="template">定型文</option>
+        <option value="free">自由記述</option>
+      </select>
+
+      <div id="templateSelectWrap">
+        <label class="field-label">テンプレート</label>
+        <select id="templateKey">
+          <option value="away">離席中</option>
+          <option value="out">外出用</option>
+          <option value="holiday">休み</option>
+        </select>
+        <div id="templateFields"></div>
+      </div>
+
+      <div id="freeTextWrap" class="hidden">
+        <label class="field-label">本文</label>
+        <textarea id="freeText" placeholder="自由にメモを入力してください"></textarea>
+      </div>
+    </div>
   </div>
-  <div id="contactWrap" class="hidden">
-    <label class="field-label">電話番号</label>
-    <input type="tel" id="contactPhone" placeholder="09012345678">
-    <label class="check-inline" style="margin-top:10px;">
-      <input type="checkbox" id="passcodeOnCall"> 発信時にパスコード
-    </label>
+
+  <div class="section frame-box">
+    <div class="fb-content">
+      <div class="section-head">
+        <span class="title">連絡先</span>
+        <label class="check-inline">
+          <input type="checkbox" id="contactEnabled"> 電話連絡を有効にする
+        </label>
+      </div>
+      <div id="contactWrap" class="hidden">
+        <label class="field-label">電話番号</label>
+        <input type="tel" id="contactPhone" placeholder="09012345678">
+        <label class="check-inline" style="margin-top:10px;">
+          <input type="checkbox" id="passcodeOnCall"> 発信時にパスコード
+        </label>
+      </div>
+    </div>
   </div>
+
+  <div class="section frame-box" id="passcodeValueSection" style="display:none;">
+    <div class="fb-content">
+      <label class="field-label">パスコード</label>
+      <input type="password" id="passcodeValue" inputmode="numeric" placeholder="1234">
+    </div>
+  </div>
+
+  <button class="primary-btn" id="formSubmitBtn" onclick="submitForm()">作成する</button>
+  <div class="status" id="statusMsgForm"></div>
 </div>
 
-<div class="section frame-box" id="passcodeValueSection" style="display:none;">
-  <label class="field-label">パスコード</label>
-  <input type="password" id="passcodeValue" inputmode="numeric" placeholder="1234">
+<!-- ============ 更新：履歴一覧画面 ============ -->
+<div class="screen" id="screenUpdateList">
+  <button class="back-btn" onclick="goMenu()">‹ 戻る</button>
+  <div id="updateHistoryList"></div>
 </div>
 
-<div class="actions-row">
-  <button onclick="createNote()">メモを作成</button>
-  <button onclick="updateNote()">メモを更新</button>
-  <button onclick="deleteNote()">メモを削除</button>
+<!-- ============ 削除：確認画面 ============ -->
+<div class="screen" id="screenDeleteConfirm">
+  <button class="back-btn" onclick="goMenu()">‹ 戻る</button>
+  <div id="deleteBody"></div>
 </div>
-
-<button class="set-btn" onclick="setActiveNote()">メモに設定</button>
-<div class="status" id="statusMsg"></div>
-
-<h2 style="font-size:13px; color:var(--text-sub); margin-top:28px;">履歴（最大5件）</h2>
-<div id="historyList"></div>
 
 <script>
 const templates = {
@@ -183,8 +241,17 @@ const templates = {
 
 const HISTORY_KEY = "awayNoteHistory";
 const ACTIVE_KEY = "awayNoteActive";
-let selectedHistoryId = null;
+let formMode = "create"; // "create" または "update"
+let editingId = null;
 
+/* ---------- 画面切り替え ---------- */
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function goMenu() { showScreen("screenMenu"); }
+
+/* ---------- localStorage ヘルパー ---------- */
 function loadHistory() {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
@@ -193,6 +260,47 @@ function loadHistory() {
 }
 function saveHistory(list) {
   localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+}
+function loadActive() {
+  try {
+    const raw = localStorage.getItem(ACTIVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- フォーム：作成 ---------- */
+function goCreate() {
+  formMode = "create";
+  editingId = null;
+  resetForm();
+  document.getElementById("formSubmitBtn").textContent = "作成する";
+  showScreen("screenForm");
+}
+
+function backFromForm() {
+  if (formMode === "update") {
+    goUpdateList();
+  } else {
+    goMenu();
+  }
+}
+
+function resetForm() {
+  document.getElementById("contentType").value = "template";
+  document.getElementById("templateKey").value = "away";
+  renderTemplateFields();
+  templates.away.fields.forEach(f => { document.getElementById("tf_" + f.key).value = ""; });
+  document.getElementById("templateSelectWrap").classList.remove("hidden");
+  document.getElementById("freeTextWrap").classList.add("hidden");
+  document.getElementById("freeText").value = "";
+  document.getElementById("contactEnabled").checked = false;
+  document.getElementById("contactWrap").classList.add("hidden");
+  document.getElementById("contactPhone").value = "";
+  document.getElementById("passcodeOnDisplay").checked = false;
+  document.getElementById("passcodeOnCall").checked = false;
+  document.getElementById("passcodeValue").value = "";
+  updatePasscodeSectionVisibility();
+  document.getElementById("statusMsgForm").textContent = "";
 }
 
 function renderTemplateFields() {
@@ -212,18 +320,21 @@ function renderTemplateFields() {
   });
 }
 
-document.getElementById("contentType").addEventListener("change", (e) => {
-  const isTemplate = e.target.value === "template";
-  document.getElementById("templateSelectWrap").classList.toggle("hidden", !isTemplate);
-  document.getElementById("freeTextWrap").classList.toggle("hidden", isTemplate);
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("contentType").addEventListener("change", (e) => {
+    const isTemplate = e.target.value === "template";
+    document.getElementById("templateSelectWrap").classList.toggle("hidden", !isTemplate);
+    document.getElementById("freeTextWrap").classList.toggle("hidden", isTemplate);
+  });
+  document.getElementById("templateKey").addEventListener("change", renderTemplateFields);
+  document.getElementById("contactEnabled").addEventListener("change", (e) => {
+    document.getElementById("contactWrap").classList.toggle("hidden", !e.target.checked);
+    updatePasscodeSectionVisibility();
+  });
+  document.getElementById("passcodeOnDisplay").addEventListener("change", updatePasscodeSectionVisibility);
+  document.getElementById("passcodeOnCall").addEventListener("change", updatePasscodeSectionVisibility);
+  renderTemplateFields();
 });
-document.getElementById("templateKey").addEventListener("change", renderTemplateFields);
-document.getElementById("contactEnabled").addEventListener("change", (e) => {
-  document.getElementById("contactWrap").classList.toggle("hidden", !e.target.checked);
-  updatePasscodeSectionVisibility();
-});
-document.getElementById("passcodeOnDisplay").addEventListener("change", updatePasscodeSectionVisibility);
-document.getElementById("passcodeOnCall").addEventListener("change", updatePasscodeSectionVisibility);
 
 function updatePasscodeSectionVisibility() {
   const need = document.getElementById("passcodeOnDisplay").checked ||
@@ -280,84 +391,106 @@ function applyFormData(data) {
   updatePasscodeSectionVisibility();
 }
 
-function showStatus(msg) {
-  const el = document.getElementById("statusMsg");
-  el.textContent = msg;
-  setTimeout(() => el.textContent = "", 2000);
-}
-
-function createNote() {
+/* 保存：作成でも更新でも「履歴に保存」と「ARに反映（active化）」を必ず両方行う */
+function submitForm() {
   const data = collectFormData();
-  data.id = "n_" + Date.now();
   let list = loadHistory();
-  list.unshift(data);
-  if (list.length > 5) list = list.slice(0, 5);
-  saveHistory(list);
-  selectedHistoryId = data.id;
-  renderHistory();
-  showStatus("履歴に作成しました");
-}
 
-function updateNote() {
-  if (!selectedHistoryId) { showStatus("先に履歴から選択してください"); return; }
-  let list = loadHistory();
-  const idx = list.findIndex(n => n.id === selectedHistoryId);
-  if (idx === -1) { showStatus("先に履歴から選択してください"); return; }
-  const data = collectFormData();
-  data.id = selectedHistoryId;
-  list[idx] = data;
-  saveHistory(list);
-  renderHistory();
-  showStatus("更新しました");
-}
+  if (formMode === "update" && editingId) {
+    data.id = editingId;
+    const idx = list.findIndex(n => n.id === editingId);
+    if (idx !== -1) {
+      list[idx] = data;
+    } else {
+      list.unshift(data);
+    }
+  } else {
+    data.id = "n_" + Date.now();
+    list.unshift(data);
+    if (list.length > 5) list = list.slice(0, 5);
+  }
 
-function deleteNote() {
-  if (!selectedHistoryId) { showStatus("先に履歴から選択してください"); return; }
-  let list = loadHistory().filter(n => n.id !== selectedHistoryId);
   saveHistory(list);
-  selectedHistoryId = null;
-  renderHistory();
-  showStatus("削除しました");
-}
-
-function setActiveNote() {
-  const data = collectFormData();
-  data.id = selectedHistoryId || ("n_" + Date.now());
   localStorage.setItem(ACTIVE_KEY, JSON.stringify(data));
-  showStatus("メモに設定しました");
+
+  document.getElementById("statusMsgForm").textContent =
+    formMode === "update" ? "更新してARに反映しました" : "作成してARに反映しました";
+
+  setTimeout(() => { goMenu(); }, 700);
 }
 
-function selectHistory(id) {
+/* ---------- 更新：履歴一覧 ---------- */
+function goUpdateList() {
+  const list = loadHistory();
+  const wrap = document.getElementById("updateHistoryList");
+  wrap.innerHTML = "";
+
+  if (list.length === 0) {
+    wrap.innerHTML = '<div class="empty-hint">更新できる履歴がまだありません</div>';
+  } else {
+    list.forEach(item => {
+      const el = document.createElement("div");
+      el.className = "history-item frame-box";
+      const dt = new Date(item.updatedAt);
+      const dtStr = (dt.getMonth()+1) + "/" + dt.getDate() + " " + String(dt.getHours()).padStart(2,"0") + ":" + String(dt.getMinutes()).padStart(2,"0");
+      el.innerHTML = `<div class="fb-content"><div class="h-title">${item.templateLabel}</div><div class="h-sub">${dtStr}</div></div>`;
+      el.addEventListener("click", () => goUpdateEdit(item.id));
+      wrap.appendChild(el);
+    });
+  }
+  window.applyFrames && window.applyFrames(wrap);
+  showScreen("screenUpdateList");
+}
+
+function goUpdateEdit(id) {
   const list = loadHistory();
   const item = list.find(n => n.id === id);
   if (!item) return;
-  selectedHistoryId = id;
+  formMode = "update";
+  editingId = id;
   applyFormData(item);
-  renderHistory();
+  document.getElementById("formSubmitBtn").textContent = "更新する";
+  document.getElementById("statusMsgForm").textContent = "";
+  showScreen("screenForm");
 }
 
-function renderHistory() {
-  const list = loadHistory();
-  const wrap = document.getElementById("historyList");
+/* ---------- 削除：確認画面 ---------- */
+function goDeleteConfirm() {
+  const active = loadActive();
+  const wrap = document.getElementById("deleteBody");
   wrap.innerHTML = "";
-  if (list.length === 0) {
-    wrap.innerHTML = '<div class="empty-hint">まだ履歴がありません</div>';
-    return;
+
+  if (!active) {
+    wrap.innerHTML = '<div class="empty-hint">削除できるメモがありません</div>';
+  } else {
+    const lines = active.contentType === "template"
+      ? Object.values(active.fields).filter(v => v)
+      : [active.fields.freeText || ""];
+
+    const preview = document.createElement("div");
+    preview.className = "note-preview frame-box";
+    preview.innerHTML = `<div class="fb-content">
+        <div class="p-title">${active.templateLabel}</div>
+        ${lines.map(l => `<div class="p-line">${l}</div>`).join("")}
+      </div>`;
+    wrap.appendChild(preview);
+
+    const confirmBtn = document.createElement("button");
+    confirmBtn.className = "danger-btn";
+    confirmBtn.textContent = "このメモを削除する";
+    confirmBtn.onclick = () => doDelete(active.id);
+    wrap.appendChild(confirmBtn);
   }
-  list.forEach(item => {
-    const el = document.createElement("div");
-    el.className = "history-item frame-box" + (item.id === selectedHistoryId ? " selected" : "");
-    const dt = new Date(item.updatedAt);
-    const dtStr = dt.getMonth()+1 + "/" + dt.getDate() + " " + String(dt.getHours()).padStart(2,"0") + ":" + String(dt.getMinutes()).padStart(2,"0");
-    el.innerHTML = `<div class="h-title">${item.templateLabel}</div><div class="h-sub">${dtStr}</div>`;
-    el.addEventListener("click", () => selectHistory(item.id));
-    wrap.appendChild(el);
-  });
+  window.applyFrames && window.applyFrames(wrap);
+  showScreen("screenDeleteConfirm");
 }
 
-// 初期化
-renderTemplateFields();
-renderHistory();
+function doDelete(id) {
+  const list = loadHistory().filter(n => n.id !== id);
+  saveHistory(list);
+  localStorage.removeItem(ACTIVE_KEY);
+  goDeleteConfirm(); // 削除後、再度この画面を呼び直すと「ありません」表示になる
+}
 </script>
 </body>
 </html>
