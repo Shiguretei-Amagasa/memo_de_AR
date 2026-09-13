@@ -4,14 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>memodeAR - 入力</title>
-<link rel="stylesheet" href="./assets/style.css">
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png">
+<link rel="stylesheet" href="./assets/style.css?v=6">
+<link rel="manifest" href="./manifest.json?v=6">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.png?v=6">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="memodeAR">
-<script src="./assets/frame.js" defer></script>
+<script src="./assets/frame.js?v=6" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="./assets/firebase-config.js?v=6"></script>
+<script src="./assets/cloud-store.js?v=6"></script>
+<!-- build: v6 -->
 <style>
   body { padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
+
+  .menu-logo {
+    display: block;
+    width: 84px;
+    height: 84px;
+    margin: 4px auto 22px;
+  }
+
 
   .screen { display: none; }
   .screen.active { display: block; }
@@ -112,10 +125,11 @@
   .hidden { display: none !important; }
 </style>
 </head>
-<body>
+<body class="paper-bg">
 
 <!-- ============ メニュー画面 ============ -->
 <div class="screen active" id="screenMenu">
+  <img class="menu-logo" src="./assets/img/memodeAR_logo.png" alt="memodeAR">
   <button class="menu-btn frame-box" onclick="goCreate()">
     <div class="fb-content">
       <div>メモを作成<div class="sub">新しいメモを作って設定する</div></div>
@@ -239,8 +253,6 @@ const templates = {
   }
 };
 
-const HISTORY_KEY = "awayNoteHistory";
-const ACTIVE_KEY = "awayNoteActive";
 let formMode = "create"; // "create" または "update"
 let editingId = null;
 
@@ -251,22 +263,19 @@ function showScreen(id) {
 }
 function goMenu() { showScreen("screenMenu"); }
 
-/* ---------- localStorage ヘルパー ---------- */
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) { return []; }
+/* ---------- クラウド（Firebase）ヘルパー ---------- */
+let cloudCache = null; // { active, history } を都度取りに行かず簡易キャッシュ
+
+async function loadCloud(force) {
+  if (cloudCache && !force) return cloudCache;
+  cloudCache = await window.memodeCloud.fetchData();
+  return cloudCache;
 }
-function saveHistory(list) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+async function saveCloud(data) {
+  cloudCache = data;
+  await window.memodeCloud.saveData(data);
 }
-function loadActive() {
-  try {
-    const raw = localStorage.getItem(ACTIVE_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
-}
+
 
 /* ---------- フォーム：作成 ---------- */
 function goCreate() {
@@ -392,39 +401,58 @@ function applyFormData(data) {
 }
 
 /* 保存：作成でも更新でも「履歴に保存」と「ARに反映（active化）」を必ず両方行う */
-function submitForm() {
-  const data = collectFormData();
-  let list = loadHistory();
+async function submitForm() {
+  const btn = document.getElementById("formSubmitBtn");
+  const statusEl = document.getElementById("statusMsgForm");
+  btn.disabled = true;
+  statusEl.textContent = "保存中…";
 
-  if (formMode === "update" && editingId) {
-    data.id = editingId;
-    const idx = list.findIndex(n => n.id === editingId);
-    if (idx !== -1) {
-      list[idx] = data;
+  try {
+    const data = collectFormData();
+    const cloud = await loadCloud(true);
+    let list = cloud.history;
+
+    if (formMode === "update" && editingId) {
+      data.id = editingId;
+      const idx = list.findIndex(n => n.id === editingId);
+      if (idx !== -1) {
+        list[idx] = data;
+      } else {
+        list.unshift(data);
+      }
     } else {
+      data.id = "n_" + Date.now();
       list.unshift(data);
+      if (list.length > 5) list = list.slice(0, 5);
     }
-  } else {
-    data.id = "n_" + Date.now();
-    list.unshift(data);
-    if (list.length > 5) list = list.slice(0, 5);
+
+    await saveCloud({ active: data, history: list });
+
+    statusEl.textContent = formMode === "update" ? "更新してARに反映しました" : "作成してARに反映しました";
+    setTimeout(() => { goMenu(); }, 700);
+  } catch (e) {
+    statusEl.textContent = "保存に失敗しました：" + e.message;
+  } finally {
+    btn.disabled = false;
   }
-
-  saveHistory(list);
-  localStorage.setItem(ACTIVE_KEY, JSON.stringify(data));
-
-  document.getElementById("statusMsgForm").textContent =
-    formMode === "update" ? "更新してARに反映しました" : "作成してARに反映しました";
-
-  setTimeout(() => { goMenu(); }, 700);
 }
 
 /* ---------- 更新：履歴一覧 ---------- */
-function goUpdateList() {
-  const list = loadHistory();
+async function goUpdateList() {
   const wrap = document.getElementById("updateHistoryList");
-  wrap.innerHTML = "";
+  wrap.innerHTML = '<div class="empty-hint">読み込み中…</div>';
+  showScreen("screenUpdateList");
 
+  let list = [];
+  try {
+    const cloud = await loadCloud(true);
+    list = cloud.history;
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty-hint">読み込みに失敗しました：${e.message}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = "";
   if (list.length === 0) {
     wrap.innerHTML = '<div class="empty-hint">更新できる履歴がまだありません</div>';
   } else {
@@ -439,12 +467,11 @@ function goUpdateList() {
     });
   }
   window.applyFrames && window.applyFrames(wrap);
-  showScreen("screenUpdateList");
 }
 
-function goUpdateEdit(id) {
-  const list = loadHistory();
-  const item = list.find(n => n.id === id);
+async function goUpdateEdit(id) {
+  const cloud = await loadCloud();
+  const item = cloud.history.find(n => n.id === id);
   if (!item) return;
   formMode = "update";
   editingId = id;
@@ -455,9 +482,20 @@ function goUpdateEdit(id) {
 }
 
 /* ---------- 削除：確認画面 ---------- */
-function goDeleteConfirm() {
-  const active = loadActive();
+async function goDeleteConfirm() {
   const wrap = document.getElementById("deleteBody");
+  wrap.innerHTML = '<div class="empty-hint">読み込み中…</div>';
+  showScreen("screenDeleteConfirm");
+
+  let cloud;
+  try {
+    cloud = await loadCloud(true);
+  } catch (e) {
+    wrap.innerHTML = `<div class="empty-hint">読み込みに失敗しました：${e.message}</div>`;
+    return;
+  }
+
+  const active = cloud.active;
   wrap.innerHTML = "";
 
   if (!active) {
@@ -482,13 +520,17 @@ function goDeleteConfirm() {
     wrap.appendChild(confirmBtn);
   }
   window.applyFrames && window.applyFrames(wrap);
-  showScreen("screenDeleteConfirm");
 }
 
-function doDelete(id) {
-  const list = loadHistory().filter(n => n.id !== id);
-  saveHistory(list);
-  localStorage.removeItem(ACTIVE_KEY);
+async function doDelete(id) {
+  try {
+    const cloud = await loadCloud(true);
+    const list = cloud.history.filter(n => n.id !== id);
+    await saveCloud({ active: null, history: list });
+  } catch (e) {
+    document.getElementById("deleteBody").innerHTML = `<div class="empty-hint">削除に失敗しました：${e.message}</div>`;
+    return;
+  }
   goDeleteConfirm(); // 削除後、再度この画面を呼び直すと「ありません」表示になる
 }
 </script>
