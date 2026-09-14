@@ -4,25 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>memodeAR - 入力</title>
-<link rel="stylesheet" href="./assets/style.css?v=7">
-<link rel="manifest" href="./manifest.json?v=7">
-<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.jpg?v=7">
+<link rel="stylesheet" href="./assets/style.css?v=9">
+<link rel="manifest" href="./manifest.json?v=9">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.jpg?v=9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="memodeAR">
-<script src="./assets/frame.js?v=7" defer></script>
+<script src="./assets/frame.js?v=9" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-<script src="./assets/firebase-config.js?v=7"></script>
-<script src="./assets/cloud-store.js?v=7"></script>
-<!-- build: v7 -->
+<script src="./assets/firebase-config.js?v=9"></script>
+<script src="./assets/cloud-store.js?v=9"></script>
+<!-- build: v9 -->
 <style>
   body { padding: 24px 16px 40px; max-width: 480px; margin: 0 auto; }
 
   .menu-logo {
     display: block;
-    width: 84px;
-    height: 84px;
-    margin: 4px auto 22px;
+    width: 56px;
+    height: 56px;
+    margin: 26px auto 4px;
   }
 
 
@@ -38,9 +38,9 @@
     font-weight: 600;
     background: #fff;
     border: none;
-    text-align: left;
+    text-align: center;
   }
-  .menu-btn .fb-content { display: flex; align-items: center; justify-content: space-between; }
+  .menu-btn .fb-content { display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .menu-btn .sub { font-size: 11px; color: var(--text-sub); font-weight: 400; margin-top: 4px; }
 
   .back-btn {
@@ -125,29 +125,26 @@
   .hidden { display: none !important; }
 </style>
 </head>
-<body class="paper-bg">
+<body class="notebook-bg">
 
 <!-- ============ メニュー画面 ============ -->
 <div class="screen active" id="screenMenu">
-  <img class="menu-logo" src="./assets/img/memodeAR_logo.png" alt="memodeAR">
   <button class="menu-btn frame-box" onclick="goCreate()">
     <div class="fb-content">
       <div>メモを作成<div class="sub">新しいメモを作って設定する</div></div>
-      <span>›</span>
     </div>
   </button>
   <button class="menu-btn frame-box" onclick="goUpdateList()">
     <div class="fb-content">
       <div>メモを更新<div class="sub">過去の履歴から選んで編集する</div></div>
-      <span>›</span>
     </div>
   </button>
   <button class="menu-btn frame-box" onclick="goDeleteConfirm()">
     <div class="fb-content">
       <div>メモを削除<div class="sub">現在設定中のメモを削除する</div></div>
-      <span>›</span>
     </div>
   </button>
+  <img class="menu-logo" src="./assets/img/memodeAR_logo.png" alt="memodeAR">
 </div>
 
 <!-- ============ 入力フォーム画面（作成／更新 共用） ============ -->

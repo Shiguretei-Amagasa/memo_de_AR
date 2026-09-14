@@ -7,14 +7,14 @@
   "theme_color": "#2b2b2b",
   "icons": [
     {
-      "src": "assets/icons/memodeAR_aicon.png",
+      "src": "assets/icons/memodeAR_aicon.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "assets/icons/memodeAR_aicon.png",
+      "src": "assets/icons/memodeAR_aicon.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
