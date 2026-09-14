@@ -4,19 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>memodeAR</title>
-<link rel="stylesheet" href="./assets/style.css?v=9">
-<link rel="manifest" href="./manifest.json?v=9">
-<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.jpg?v=9">
+<link rel="stylesheet" href="./assets/style.css?v=10">
+<link rel="manifest" href="./manifest.json?v=10">
+<link rel="apple-touch-icon" href="./assets/icons/memodeAR_aicon.jpg?v=10">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="memodeAR">
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-<script src="./assets/frame.js?v=9" defer></script>
+<script src="./assets/frame.js?v=10" defer></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-<script src="./assets/firebase-config.js?v=9"></script>
-<script src="./assets/cloud-store.js?v=9"></script>
-<!-- build: v9 -->
+<script src="./assets/firebase-config.js?v=10"></script>
+<script src="./assets/cloud-store.js?v=10"></script>
+<!-- build: v10 -->
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
   a-scene { width: 100%; height: 100%; }
@@ -39,7 +39,6 @@
     z-index: 15;
   }
   #noteOverlay .fb-content { padding: 20px; }
-  #noteOverlay .tpl-label { font-size: 12px; color: var(--text-sub); margin-bottom: 6px; }
   #noteOverlay .note-line { font-size: 15px; line-height: 1.6; margin-bottom: 4px; white-space: pre-wrap; }
   #callBtn {
     margin-top: 14px;
@@ -93,7 +92,6 @@
 
 <div id="noteOverlay" class="frame-box">
   <div class="fb-content">
-    <div class="tpl-label" id="noteTplLabel"></div>
     <div id="noteBody"></div>
     <button id="callBtn" class="hidden">電話をかける</button>
   </div>
@@ -158,7 +156,6 @@ function buildNoteLines(data) {
 }
 
 function renderNote() {
-  document.getElementById("noteTplLabel").textContent = noteData.templateLabel;
   const body = document.getElementById("noteBody");
   body.innerHTML = "";
   buildNoteLines(noteData).forEach(line => {
