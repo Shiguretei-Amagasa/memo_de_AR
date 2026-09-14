@@ -126,40 +126,17 @@ body {
   );
 }
 
-/* 入力画面用：ノート用紙のような青い罫線＋左右の目盛りの背景 */
+/* 入力画面用：ノート用紙のような青い横罫線の背景 */
 .notebook-bg {
   background-color: #fdfcf6;
-  background-image:
-    /* 横罫線 */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 27px,
-      rgba(93, 145, 196, 0.55) 27px,
-      rgba(93, 145, 196, 0.55) 28px,
-      transparent 28px
-    ),
-    /* 左端の目盛り */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 22px,
-      rgba(93, 145, 196, 0.6) 22px,
-      rgba(93, 145, 196, 0.6) 28px,
-      transparent 28px
-    ),
-    /* 右端の目盛り */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 22px,
-      rgba(93, 145, 196, 0.6) 22px,
-      rgba(93, 145, 196, 0.6) 28px,
-      transparent 28px
-    );
-  background-size: 100% 28px, 3px 28px, 3px 28px;
-  background-position: 0 0, 10px 0, calc(100% - 13px) 0;
-  background-repeat: repeat, repeat-y, repeat-y;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 27px,
+    rgba(93, 145, 196, 0.55) 27px,
+    rgba(93, 145, 196, 0.55) 28px,
+    transparent 28px
+  );
 }
 
 
